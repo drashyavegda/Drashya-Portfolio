@@ -27,7 +27,7 @@ export async function GET() {
         githubTokenConfigured: Boolean(process.env.GITHUB_PERSONAL_TOKEN),
         persistenceWarning:
           store.mode === 'local' && process.env.VERCEL === '1'
-            ? 'Running on Vercel with the local JSON store — changes will NOT persist across deployments/scale. Configure Supabase (see README).'
+            ? 'Running on Vercel without Supabase: edits are kept in this server instance’s temporary storage and will be lost on redeploy or when Vercel scales to a new instance. Configure Supabase (README “Supabase Setup”) for permanent storage.'
             : null,
       },
     });

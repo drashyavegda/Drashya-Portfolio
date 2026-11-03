@@ -190,6 +190,30 @@ Per the project brief, the platform is designed to **never fabricate**:
 
 ---
 
+## 🩺 Troubleshooting
+
+### “Application error: a server-side exception has occurred” on Vercel
+This happened with the **first zip**: the local JSON store tried to create its `data/` folder on Vercel’s **read-only filesystem**, which crashed every server-rendered page.
+
+**Fixed in this version.** The local store now probes storage in three tiers and never crashes:
+1. `data/` on disk — normal local development (durable);
+2. `/tmp/dv-portfolio-data` — read-only hosts like Vercel (edits persist per warm server instance);
+3. in-memory — last resort if nothing is writable.
+
+Verify any deployment instantly at **`https://<your-app>/api/health`** — it reports the active storage tier.
+Notes for Vercel without Supabase:
+- Content edits from `/admin` work, but live in the instance’s temp storage and reset on redeploy/scale-out (the dashboard shows a warning banner).
+- **File uploads** (resume, certificates, screenshots) require Supabase Storage on serverless; the API returns a clear message instead of failing silently.
+- **For permanent production storage, connect Supabase** (steps above) — then everything, including uploads, persists in PostgreSQL/Storage.
+
+### Admin login says “not configured”
+Local/demo mode needs `ADMIN_EMAIL`, `ADMIN_PASSWORD` (and ideally `AUTH_SECRET`) in your environment — on Vercel add them under **Project → Settings → Environment Variables**, then redeploy. With Supabase configured, log in with the Supabase Auth user instead.
+
+### GitHub section shows “unavailable”
+The public GitHub API rate-limits unauthenticated requests (60/h per IP). The proxy caches for 10 minutes and serves stale data on rate-limit; add `GITHUB_PERSONAL_TOKEN` for a much higher quota.
+
+---
+
 ## 📄 Environment Variables Reference
 
 See [`.env.example`](.env.example) for the full annotated list:

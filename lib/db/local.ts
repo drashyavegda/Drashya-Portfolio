@@ -7,18 +7,30 @@ import { newId, summarizeEvents } from './store';
 
 /**
  * Local JSON-file store — the zero-config fallback.
- * Works out of the box for local development and demos. On serverless hosts
- * (Vercel) the filesystem is ephemeral, so configure Supabase for production
- * persistence (see README.md).
+ *
+ * SERVERLESS-SAFE, three storage tiers (probed once, cached):
+ *   1. `cwd/data`     — normal local development (durable on disk)
+ *   2. `/tmp/...`     — read-only hosts like Vercel (persists per warm
+ *                       instance, shared by all route bundles)
+ *   3. in-memory     — last resort if nothing is writable
+ *
+ * File uploads require tier 1 or Supabase Storage; on serverless hosts the
+ * API returns a clear, actionable error instead of crashing.
+ *
+ * For durable production storage on Vercel, configure Supabase (README).
+ * FORCE_READONLY_STORE=true simulates a read-only host locally (tier 2).
  */
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
-const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
+const CWD_DATA_DIR = path.join(process.cwd(), 'data');
+const TMP_DATA_DIR = '/tmp/dv-portfolio-data';
 const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_EVENTS = 20000;
 
+type FsTier = 'cwd' | 'tmp' | 'memory';
+let tier: FsTier | 'unknown' = 'unknown';
 let writeChain: Promise<unknown> = Promise.resolve();
+let memSnapshot: Snapshot | null = null;
+let memEvents: AnalyticsEvent[] = [];
 
 function serialize<T>(task: () => Promise<T>): Promise<T> {
   const result = writeChain.then(task, task);
@@ -26,35 +38,90 @@ function serialize<T>(task: () => Promise<T>): Promise<T> {
   return result;
 }
 
-async function ensureFiles(): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.mkdir(UPLOADS_DIR, { recursive: true });
+function cloneSeed(): Snapshot {
+  return JSON.parse(JSON.stringify(SEED)) as Snapshot;
+}
+
+async function dirIsWritable(dir: string): Promise<boolean> {
   try {
-    await fs.access(CONTENT_FILE);
+    await fs.mkdir(dir, { recursive: true });
+    const probe = path.join(dir, '.write-probe');
+    await fs.writeFile(probe, 'ok');
+    await fs.unlink(probe);
+    return true;
   } catch {
-    await fs.writeFile(CONTENT_FILE, JSON.stringify(SEED, null, 2), 'utf8');
+    return false;
   }
 }
 
+async function resolveTier(): Promise<FsTier> {
+  if (tier !== 'unknown') return tier;
+  const simulateReadonly = process.env.FORCE_READONLY_STORE === 'true';
+  if (!simulateReadonly && (await dirIsWritable(CWD_DATA_DIR))) {
+    tier = 'cwd';
+  } else if (await dirIsWritable(TMP_DATA_DIR)) {
+    tier = 'tmp';
+  } else {
+    tier = 'memory';
+  }
+  return tier;
+}
+
+/** Current storage tier — surfaced by /api/health and the admin dashboard. */
+export function localStoreMode(): FsTier | 'unknown' {
+  return tier;
+}
+
+function dataDir(): string | null {
+  if (tier === 'cwd') return CWD_DATA_DIR;
+  if (tier === 'tmp') return TMP_DATA_DIR;
+  return null;
+}
+
 async function readContent(): Promise<Snapshot> {
-  await ensureFiles();
-  const raw = await fs.readFile(CONTENT_FILE, 'utf8');
-  const parsed = JSON.parse(raw) as Snapshot;
-  // Defensive merge so newly added seed fields exist on older data files.
-  return {
-    ...SEED,
-    ...parsed,
-    profile: { ...SEED.profile, ...parsed.profile },
-    settings: { ...SEED.settings, ...parsed.settings },
-    availability: { ...SEED.availability, ...parsed.availability },
-    education: { ...SEED.education, ...parsed.education },
-    resume: { ...SEED.resume, ...parsed.resume },
-  };
+  const base = dataDir();
+  if (!base) {
+    if (!memSnapshot) memSnapshot = cloneSeed();
+    return memSnapshot;
+  }
+  const file = path.join(base, 'content.json');
+  try {
+    const raw = await fs.readFile(file, 'utf8');
+    const parsed = JSON.parse(raw) as Snapshot;
+    return {
+      ...SEED,
+      ...parsed,
+      profile: { ...SEED.profile, ...parsed.profile },
+      settings: { ...SEED.settings, ...parsed.settings },
+      availability: { ...SEED.availability, ...parsed.availability },
+      education: { ...SEED.education, ...parsed.education },
+      resume: { ...SEED.resume, ...parsed.resume },
+    };
+  } catch {
+    const fresh = cloneSeed();
+    try {
+      await fs.mkdir(base, { recursive: true });
+      await fs.writeFile(file, JSON.stringify(fresh, null, 2), 'utf8');
+    } catch {
+      memSnapshot = fresh;
+    }
+    return fresh;
+  }
 }
 
 async function writeContent(snapshot: Snapshot): Promise<Snapshot> {
   snapshot.updatedAt = new Date().toISOString();
-  await fs.writeFile(CONTENT_FILE, JSON.stringify(snapshot, null, 2), 'utf8');
+  const base = dataDir();
+  if (!base) {
+    memSnapshot = snapshot;
+    return snapshot;
+  }
+  try {
+    await fs.mkdir(base, { recursive: true });
+    await fs.writeFile(path.join(base, 'content.json'), JSON.stringify(snapshot, null, 2), 'utf8');
+  } catch {
+    memSnapshot = snapshot; // disk vanished mid-run — keep serving from memory
+  }
   return snapshot;
 }
 
@@ -92,9 +159,10 @@ const ENTITY_META: Record<EntityKey, EntityMeta> = {
 };
 
 async function readAnalytics(): Promise<AnalyticsEvent[]> {
-  await ensureFiles();
+  const base = dataDir();
+  if (!base) return memEvents;
   try {
-    const raw = await fs.readFile(ANALYTICS_FILE, 'utf8');
+    const raw = await fs.readFile(path.join(base, 'analytics.json'), 'utf8');
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as AnalyticsEvent[]) : [];
   } catch {
@@ -106,10 +174,12 @@ export const localStore: Store = {
   mode: 'local',
 
   async getSnapshot() {
+    await resolveTier();
     return readContent();
   },
 
   async updateSite(patch: SitePatch) {
+    await resolveTier();
     return serialize(async () => {
       const current = await readContent();
       const next: Snapshot = {
@@ -125,6 +195,7 @@ export const localStore: Store = {
   },
 
   async createItem(entity: EntityKey, item: Record<string, unknown>) {
+    await resolveTier();
     return serialize(async () => {
       const current = await readContent();
       const meta = ENTITY_META[entity];
@@ -135,6 +206,7 @@ export const localStore: Store = {
   },
 
   async updateItem(entity: EntityKey, id: string, patch: Record<string, unknown>) {
+    await resolveTier();
     return serialize(async () => {
       const current = await readContent();
       const list = current[entity] as unknown as Array<Record<string, unknown>>;
@@ -146,6 +218,7 @@ export const localStore: Store = {
   },
 
   async deleteItem(entity: EntityKey, id: string) {
+    await resolveTier();
     return serialize(async () => {
       const current = await readContent();
       const list = (current[entity] as Array<{ id: string }>).filter((row) => row.id !== id);
@@ -154,6 +227,7 @@ export const localStore: Store = {
   },
 
   async addMessage(msg) {
+    await resolveTier();
     return serialize(async () => {
       const current = await readContent();
       const record: Message = {
@@ -168,6 +242,7 @@ export const localStore: Store = {
   },
 
   async setMessagesState(updates) {
+    await resolveTier();
     await serialize(async () => {
       const current = await readContent();
       let messages = [...current.messages];
@@ -183,18 +258,34 @@ export const localStore: Store = {
   },
 
   async recordEvents(events: AnalyticsEvent[]) {
+    await resolveTier();
     await serialize(async () => {
-      const existing = await readAnalytics();
-      const next = [...existing, ...events].slice(-MAX_EVENTS);
-      await fs.writeFile(ANALYTICS_FILE, JSON.stringify(next), 'utf8');
+      const base = dataDir();
+      if (!base) {
+        memEvents = [...memEvents, ...events].slice(-MAX_EVENTS);
+        return;
+      }
+      try {
+        const existing = await readAnalytics();
+        await fs.writeFile(path.join(base, 'analytics.json'), JSON.stringify([...existing, ...events].slice(-MAX_EVENTS)));
+      } catch {
+        memEvents = [...memEvents, ...events].slice(-MAX_EVENTS);
+      }
     });
   },
 
   async getAnalytics(): Promise<AnalyticsSummary> {
+    await resolveTier();
     return summarizeEvents(await readAnalytics());
   },
 
   async saveUpload(file: File, folder: string) {
+    await resolveTier();
+    if (tier !== 'cwd') {
+      throw new Error(
+        'File uploads need persistent storage on serverless hosts — connect Supabase (README “Supabase Setup”); uploads then use Supabase Storage automatically.',
+      );
+    }
     const dir = path.join(UPLOADS_DIR, folder);
     await fs.mkdir(dir, { recursive: true });
     const ext = path.extname(file.name).toLowerCase() || '.bin';
