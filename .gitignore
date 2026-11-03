@@ -1,0 +1,26 @@
+# Dependencies & build output
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Environment — NEVER commit secrets
+.env
+.env.local
+.env*.local
+
+# Runtime data (local JSON store, uploads, analytics)
+data/*.json
+public/uploads/
+
+# TypeScript / Next generated
+*.tsbuildinfo
+next-env.d.ts
+
+# Misc
+.DS_Store
+.vercel
+npm-debug.log*
+yarn-error.log*
+coverage/
