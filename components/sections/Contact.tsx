@@ -233,7 +233,7 @@ export default function Contact({ profile }: { profile: Profile }) {
                     )}
                   </button>
 
-                  <p className="mt-4 flex items-center gap-1.5 font-mono text-[10.5px] text-muted/70">
+                  <p className="mt-4 flex items-center gap-1.5 font-mono text-[10.5px] text-muted">
                     <CheckCircle2 className="h-3 w-3" aria-hidden />
                     Protected by honeypot + rate limiting. Your message goes straight to Drashya&apos;s private inbox.
                   </p>

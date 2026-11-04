@@ -48,17 +48,21 @@ export default function Experience({ hackathons }: { hackathons: Hackathon[] }) 
 
                   <h3 className="font-display text-base font-semibold leading-snug">{h.name}</h3>
 
-                  <dl className="mt-4 flex-1 space-y-2.5 text-xs text-muted">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-neon/70" aria-hidden />
-                      <dt className="sr-only">Date</dt>
-                      <dd>{h.date ? formatDate(h.date) : 'Date to be added'}</dd>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Award className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon/70" aria-hidden />
-                      <dt className="sr-only">Project</dt>
-                      <dd>{h.project || 'Project details to be added'}</dd>
-                    </div>
+                  <dl className="mt-4 flex-1 space-y-2.5 text-xs text-soft">
+                    {h.date && (
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-neon/70" aria-hidden />
+                        <dt className="sr-only">Date</dt>
+                        <dd>{formatDate(h.date)}</dd>
+                      </div>
+                    )}
+                    {h.project && (
+                      <div className="flex items-start gap-2">
+                        <Award className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon/70" aria-hidden />
+                        <dt className="sr-only">Project</dt>
+                        <dd>{h.project}</dd>
+                      </div>
+                    )}
                     {h.technologies.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {h.technologies.map((t) => (
@@ -69,9 +73,9 @@ export default function Experience({ hackathons }: { hackathons: Hackathon[] }) 
                     {h.notes && <dd className="pt-1 italic">{h.notes}</dd>}
                   </dl>
 
-                  <div className="mt-5 border-t border-line/12 pt-4">
-                    {h.certificateFile ? (
-                      <div className="flex items-center justify-between gap-2">
+                  {(h.certificateFile || h.certificateLink) && (
+                    <div className="mt-5 flex items-center justify-between gap-2 border-t border-line/12 pt-4">
+                      {h.certificateFile ? (
                         <a
                           href={h.certificateFile}
                           target="_blank"
@@ -80,23 +84,21 @@ export default function Experience({ hackathons }: { hackathons: Hackathon[] }) 
                         >
                           <FileCheck2 className="h-3.5 w-3.5" aria-hidden /> View certificate
                         </a>
-                        {h.certificateLink && (
-                          <a
-                            href={h.certificateLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-[11px] text-muted hover:text-violet hover:underline"
-                          >
-                            Verify ↗
-                          </a>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="font-mono text-[10.5px] text-muted/70">
-                        Certificate on file — preview coming soon (upload via Admin Dashboard).
-                      </p>
-                    )}
-                  </div>
+                      ) : (
+                        <span />
+                      )}
+                      {h.certificateLink && (
+                        <a
+                          href={h.certificateLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-[11px] text-muted hover:text-violet hover:underline"
+                        >
+                          Verify ↗
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </article>
               </Reveal>
             );

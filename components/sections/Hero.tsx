@@ -15,7 +15,7 @@ interface Props {
 }
 
 function useTypewriter(roles: string[]) {
-  const [text, setText] = useState('');
+  const [text, setText] = useState(roles[0] ?? '');
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
@@ -24,6 +24,7 @@ function useTypewriter(roles: string[]) {
       setText(roles[0] ?? '');
       return;
     }
+    setText('');
     let roleIdx = 0;
     let charIdx = 0;
     let deleting = false;
@@ -74,20 +75,17 @@ export default function Hero({ profile, availability, resume }: Props) {
       <div className="container-x relative z-10 grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
         {/* Left: identity */}
         <div className="order-2 text-center lg:order-1 lg:text-left">
-          <div
-            className={cx('mb-5 flex justify-center lg:justify-start transition-all duration-700', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
-          >
+          <div className={cx('fade-item mb-5 flex justify-center lg:justify-start', mounted && 'on')}>
             <AvailabilityBadge availability={availability} />
           </div>
 
-          <p
-            className={cx('font-mono text-sm uppercase tracking-[0.35em] text-neon transition-all delay-100 duration-700', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
-          >
+          <p className={cx('fade-item font-mono text-sm uppercase tracking-[0.35em] text-neon', mounted && 'on')} style={{ transitionDelay: '100ms' }}>
             Hello, I&apos;m
           </p>
 
           <h1
-            className={cx('mt-3 font-display text-5xl font-bold leading-[1.05] tracking-tight transition-all delay-200 duration-700 sm:text-6xl xl:text-7xl', mounted ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0')}
+            className={cx('fade-item mt-3 font-display text-[2.6rem] font-bold leading-[1.05] tracking-tight sm:text-6xl xl:text-7xl', mounted && 'on')}
+            style={{ transitionDelay: '200ms' }}
           >
             <span className="block text-ink">{profile.name.split(' ')[0]}</span>
             <span className="block gradient-text drop-shadow-[0_0_28px_rgb(var(--c-neon)/0.35)]">
@@ -96,7 +94,8 @@ export default function Hero({ profile, availability, resume }: Props) {
           </h1>
 
           <p
-            className={cx('mt-4 font-mono text-base text-muted transition-all delay-300 duration-700 sm:text-lg', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
+            className={cx('fade-item mt-4 font-mono text-base text-muted sm:text-lg', mounted && 'on')}
+            style={{ transitionDelay: '300ms' }}
             aria-live="polite"
           >
             <span className="text-violet">&gt;</span> {text}
@@ -105,20 +104,23 @@ export default function Hero({ profile, availability, resume }: Props) {
           </p>
 
           <p
-            className={cx('mt-3 font-display text-sm font-medium text-ink/90 transition-all delay-[350ms] duration-700 sm:text-base', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
+            className={cx('fade-item mt-3 font-display text-sm font-medium text-ink/90 sm:text-base', mounted && 'on')}
+            style={{ transitionDelay: '350ms' }}
           >
             {profile.title}
           </p>
 
           <p
-            className={cx('mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted transition-all delay-[450ms] duration-700 sm:text-base lg:mx-0', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
+            className={cx('fade-item mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted sm:text-base lg:mx-0', mounted && 'on')}
+            style={{ transitionDelay: '450ms' }}
           >
             {profile.intro}
           </p>
 
           {/* CTAs */}
           <div
-            className={cx('mt-8 flex flex-wrap items-center justify-center gap-3 transition-all delay-500 duration-700 lg:justify-start', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
+            className={cx('fade-item mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start', mounted && 'on')}
+            style={{ transitionDelay: '500ms' }}
           >
             <a href="#projects" className="btn-primary">
               <Wand2 className="h-4 w-4" aria-hidden /> View My Work
@@ -135,7 +137,8 @@ export default function Hero({ profile, availability, resume }: Props) {
 
           {/* Socials + email */}
           <div
-            className={cx('mt-9 flex flex-col items-center gap-4 transition-all delay-[600ms] duration-700 sm:flex-row lg:items-start', mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
+            className={cx('fade-item mt-9 flex flex-col items-center gap-4 sm:flex-row lg:items-start', mounted && 'on')}
+            style={{ transitionDelay: '600ms' }}
           >
             <div className="flex items-center gap-2.5">
               <a
@@ -171,9 +174,7 @@ export default function Hero({ profile, availability, resume }: Props) {
         </div>
 
         {/* Right: 3D workspace */}
-        <div
-          className={cx('order-1 transition-all delay-200 duration-1000 lg:order-2', mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0')}
-        >
+        <div className={cx('fade-item order-1 lg:order-2', mounted && 'on')} style={{ transitionDelay: '200ms' }}>
           <HeroScene />
         </div>
       </div>

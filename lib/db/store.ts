@@ -35,6 +35,8 @@ export interface Store {
   getAnalytics(): Promise<AnalyticsSummary>;
   /** Save an uploaded file and return its public URL/path. */
   saveUpload(file: File, folder: string): Promise<string>;
+  /** Best-effort removal of a previously uploaded file (used when an item is deleted). */
+  deleteUpload?(url: string): Promise<void>;
 }
 
 export function summarizeEvents(events: AnalyticsEvent[]): AnalyticsSummary {

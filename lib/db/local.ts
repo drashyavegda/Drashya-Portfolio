@@ -91,7 +91,12 @@ async function readContent(): Promise<Snapshot> {
     return {
       ...SEED,
       ...parsed,
-      profile: { ...SEED.profile, ...parsed.profile },
+      profile: {
+        ...SEED.profile,
+        ...parsed.profile,
+        // nested merge: partial/corrupt socials must never leave dot-accesses undefined
+        socials: { ...SEED.profile.socials, ...(parsed.profile?.socials ?? {}) },
+      },
       settings: { ...SEED.settings, ...parsed.settings },
       availability: { ...SEED.availability, ...parsed.availability },
       education: { ...SEED.education, ...parsed.education },
@@ -293,5 +298,20 @@ export const localStore: Store = {
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(path.join(dir, safeName), buffer);
     return `/uploads/${folder}/${safeName}`;
+  },
+
+  async deleteUpload(url: string) {
+    // Best-effort: only removes files this store wrote under /uploads (cwd tier).
+    if (!url.startsWith('/uploads/')) return;
+    await resolveTier();
+    if (tier !== 'cwd') return;
+    try {
+      const rel = decodeURIComponent(url.replace('/uploads/', '').split('?')[0]);
+      const target = path.join(UPLOADS_DIR, rel);
+      if (!target.startsWith(UPLOADS_DIR + path.sep)) return; // path-traversal guard
+      await fs.rm(target, { force: true });
+    } catch {
+      /* best-effort cleanup — never fail the delete because of it */
+    }
   },
 };

@@ -194,7 +194,7 @@ export default function Navbar({ name, socials, availability }: Props) {
                   )}
                 >
                   {link.label}
-                  <span className="font-mono text-[10px] text-muted/60">0{i + 1}</span>
+                  <span className="font-mono text-[10px] text-muted">0{i + 1}</span>
                 </Link>
               </li>
             ))}

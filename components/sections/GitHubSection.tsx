@@ -147,7 +147,7 @@ export default function GitHubSection({ username, profileUrl }: { username: stri
             </Reveal>
 
             {data.fromCache && (
-              <p className="mb-4 text-center font-mono text-[11px] text-muted/70">
+              <p className="mb-4 text-center font-mono text-[11px] text-muted">
                 Showing cached data (GitHub rate limit reached) — refreshed periodically.
               </p>
             )}

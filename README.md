@@ -77,7 +77,11 @@ Without Supabase the app uses the local JSON store — perfect for development, 
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor** and run the entire [`supabase/schema.sql`](supabase/schema.sql) file.
-   This creates all tables, Row Level Security policies, and the public `uploads` storage bucket.
+   This creates all tables, Row Level Security policies, and the public storage buckets:
+   **`certificates`** (certificate PDF/JPG/PNG files) and **`uploads`** (screenshots, resume,
+   avatars, blog covers). Both inserts are idempotent — existing buckets are never duplicated.
+   If `SUPABASE_SERVICE_ROLE_KEY` is configured, the app also **auto-creates each bucket on
+   first upload**, so this step is a safety net rather than a hard requirement.
 3. Create the admin user: **Authentication → Users → Add user** (email + password, e.g. Drashya's Gmail).
 4. Copy the keys: **Project Settings → API**
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -111,9 +115,12 @@ All secrets are read **only in server-side route handlers** — never exposed to
 
 1. Push this repository to GitHub (**never commit `.env.local`** — it is gitignored).
 2. In [Vercel](https://vercel.com), **Add New → Project → Import** the repository (framework auto-detected: Next.js).
-3. Add environment variables:
-   - `NEXT_PUBLIC_SITE_URL` = your production URL (e.g. `https://drashya-vegda.vercel.app`)
-   - Supabase vars (⚠ **required on Vercel** — the local JSON store does not persist on serverless)
+3. Add environment variables (**Project → Settings → Environment Variables**, then redeploy):
+   - `NEXT_PUBLIC_SITE_URL` = your production URL (e.g. `https://drashya-portfolio-v2.vercel.app`)
+   - ⚠ **Required for persistence + certificate uploads on Vercel** (Project Settings → API):
+     - `NEXT_PUBLIC_SUPABASE_URL` = `https://<project-ref>.supabase.co`
+     - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = the `anon` `public` key
+     - `SUPABASE_SERVICE_ROLE_KEY` = the `service_role` key (secret — server-side only; enables writes, uploads and automatic bucket creation)
    - Optional: `OPENAI_API_KEY` / `GEMINI_API_KEY`, `RESEND_API_KEY` + `RESEND_FROM_EMAIL`, `GITHUB_PERSONAL_TOKEN`
 4. Deploy. Then sign in at `https://your-domain/admin` using the Supabase admin user.
 5. Upload the resume, certificate files, project screenshots, and set the availability badge from the dashboard.
@@ -205,6 +212,7 @@ Notes for Vercel without Supabase:
 - Content edits from `/admin` work, but live in the instance’s temp storage and reset on redeploy/scale-out (the dashboard shows a warning banner).
 - **File uploads** (resume, certificates, screenshots) require Supabase Storage on serverless; the API returns a clear message instead of failing silently.
 - **For permanent production storage, connect Supabase** (steps above) — then everything, including uploads, persists in PostgreSQL/Storage.
+- **Certificate uploads** go to the dedicated public **`certificates`** bucket (auto-created on first upload with `SUPABASE_SERVICE_ROLE_KEY`, or create it manually: Storage → New bucket → name `certificates` → Public). Allowed types: PDF, JPG, JPEG, PNG (WebP accepted too); max 10 MB. Deleting a certificate in `/admin` also removes its storage file.
 
 ### Admin login says “not configured”
 Local/demo mode needs `ADMIN_EMAIL`, `ADMIN_PASSWORD` (and ideally `AUTH_SECRET`) in your environment — on Vercel add them under **Project → Settings → Environment Variables**, then redeploy. With Supabase configured, log in with the Supabase Auth user instead.

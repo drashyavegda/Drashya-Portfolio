@@ -8,8 +8,9 @@
   --c-bg: 5 7 12;
   --c-raised: 13 16 26;
   --c-line: 148 163 184;
-  --c-ink: 232 236 244;
-  --c-muted: 148 163 184;
+  --c-ink: 248 250 252;   /* main text — #F8FAFC */
+  --c-soft: 203 213 225;  /* secondary text — #CBD5E1 */
+  --c-muted: 148 163 184; /* muted text — #94A3B8 */
   --c-neon: 56 189 248;
   --c-violet: 167 139 250;
   --glass-alpha: 0.55;
@@ -22,8 +23,9 @@
   --c-bg: 246 248 252;
   --c-raised: 255 255 255;
   --c-line: 100 116 139;
-  --c-ink: 15 23 42;
-  --c-muted: 71 85 105;
+  --c-ink: 15 23 42;   /* #0F172A */
+  --c-soft: 51 65 85;  /* #334155 */
+  --c-muted: 71 85 105; /* #475569 */
   --c-neon: 2 132 199;
   --c-violet: 124 58 237;
   --glass-alpha: 0.7;
@@ -35,6 +37,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 88px;
+  overflow-x: clip;
 }
 
 body {
@@ -97,8 +100,17 @@ body {
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent;
+    @apply bg-clip-text;
     background-image: linear-gradient(100deg, rgb(var(--c-neon)), rgb(var(--c-violet)));
+  }
+  /* Only make text transparent when background-clip:text is actually supported,
+     so a failure can never render invisible headings. */
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .gradient-text {
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
   }
 
   .btn-primary {
@@ -129,7 +141,8 @@ body {
     @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium;
     border-color: rgb(var(--c-line) / 0.2);
     background: rgb(var(--c-raised) / 0.5);
-    color: rgb(var(--c-muted));
+    /* secondary-text token: readable on every card/button background */
+    color: rgb(var(--c-soft));
   }
 
   .input {
@@ -165,7 +178,7 @@ body {
   /* Blog prose */
   .prose-dv {
     @apply text-base leading-relaxed sm:text-lg;
-    color: rgb(var(--c-ink) / 0.9);
+    color: rgb(var(--c-ink));
   }
   .prose-dv h2 {
     @apply mt-10 mb-4 font-display text-2xl font-bold sm:text-3xl;
@@ -270,6 +283,29 @@ body.custom-cursor-enabled * {
   to { transform: rotate(360deg); }
 }
 
+/* Entrance animation that is SAFE BY DEFAULT:
+   - Without JS the `html.js` class never exists → content is fully visible.
+   - With JS, blocks start hidden and transition in when `.on` is added.
+   - Reduced motion → always visible, no transition. */
+.js .fade-item {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.21, 0.65, 0.36, 1),
+    transform 0.7s cubic-bezier(0.21, 0.65, 0.36, 1);
+}
+.js .fade-item.on {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .fade-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 /* Reduced motion: calm everything down */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -283,5 +319,5 @@ body.custom-cursor-enabled * {
 
 /* Admin table & forms */
 .admin-label {
-  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-soft;
 }

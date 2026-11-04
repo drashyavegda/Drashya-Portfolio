@@ -2,9 +2,26 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Check, ExternalLink, Github, Layers, Star, Triangle } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Check,
+  Cpu,
+  ExternalLink,
+  Github,
+  GraduationCap,
+  HeartPulse,
+  Layers,
+  Leaf,
+  MapPin,
+  Star,
+  Triangle,
+  Wallet,
+  ZoomIn,
+} from 'lucide-react';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
+import SafeImage from '@/components/ui/SafeImage';
+import Lightbox from '@/components/ui/Lightbox';
 import type { Project } from '@/lib/types';
 import { cx } from '@/lib/utils';
 
@@ -12,31 +29,66 @@ function projectShortTitle(p: Project): string {
   return p.title.split('–')[0].split('—')[0].trim();
 }
 
-function ProjectVisual({ project }: { project: Project }) {
+function categoryIcon(category: string) {
+  const c = category.toLowerCase();
+  if (c.includes('sustain')) return Leaf;
+  if (c.includes('finance')) return Wallet;
+  if (c.includes('health')) return HeartPulse;
+  if (c.includes('education')) return GraduationCap;
+  if (c.includes('web') || c.includes('productivity')) return MapPin;
+  if (c.includes('ai')) return Cpu;
+  return Layers;
+}
+
+/** Consistent 16:9 visual: real screenshot when available, otherwise an
+ *  attractive branded illustration (no visitor-facing "pending" text). */
+function ProjectVisual({ project, onPreview }: { project: Project; onPreview: () => void }) {
+  const Icon = categoryIcon(project.category);
+  const short = projectShortTitle(project);
+  const monogram = short
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('');
+
   if (project.screenshots.length > 0) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={project.screenshots[0]}
-        alt={`${projectShortTitle(project)} screenshot`}
-        loading="lazy"
-        className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+      <button
+        type="button"
+        onClick={onPreview}
+        aria-label={`View screenshot of ${short}`}
+        data-cursor-hover
+        className="group/visual relative block aspect-video w-full overflow-hidden"
+      >
+        <SafeImage
+          src={project.screenshots[0]}
+          alt={`${short} screenshot`}
+          className="h-full w-full"
+          fallbackClassName="aspect-video"
+        />
+        <span className="absolute inset-0 grid place-items-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover/visual:opacity-100">
+          <span className="grid h-11 w-11 place-items-center rounded-full border border-neon/50 bg-base/80 text-neon backdrop-blur-sm">
+            <ZoomIn className="h-5 w-5" aria-hidden />
+          </span>
+        </span>
+      </button>
     );
   }
-  // Decorative placeholder until real screenshots are uploaded via /admin.
+
   return (
-    <div className="relative grid h-44 w-full place-items-center overflow-hidden bg-gradient-to-br from-neon/12 via-raised to-violet/12">
-      <div className="grid-bg absolute inset-0 opacity-60" aria-hidden />
-      <span className="relative font-display text-4xl font-bold gradient-text drop-shadow-[0_0_20px_rgb(var(--c-neon)/0.4)]">
-        {projectShortTitle(project)
-          .split(' ')
-          .slice(0, 2)
-          .map((w) => w[0])
-          .join('')}
-      </span>
-      <span className="absolute bottom-3 right-3 font-mono text-[9px] uppercase tracking-widest text-muted/60">
-        screenshot pending
+    <div className="relative grid aspect-video w-full place-items-center overflow-hidden bg-gradient-to-br from-neon/12 via-raised to-violet/14">
+      <div className="grid-bg absolute inset-0 opacity-70" aria-hidden />
+      <Icon className="absolute -bottom-6 -right-6 h-32 w-32 text-neon/10" aria-hidden />
+      <div className="relative flex flex-col items-center gap-2">
+        <span className="grid h-14 w-14 place-items-center rounded-2xl border border-neon/30 bg-base/60 shadow-glow backdrop-blur-sm">
+          <Icon className="h-6 w-6 text-neon" aria-hidden />
+        </span>
+        <span className="font-display text-2xl font-bold gradient-text drop-shadow-[0_0_18px_rgb(var(--c-neon)/0.4)]">
+          {monogram}
+        </span>
+      </div>
+      <span className="absolute left-3 top-3 font-mono text-[9px] uppercase tracking-widest text-muted">
+        {project.category}
       </span>
     </div>
   );
@@ -44,21 +96,22 @@ function ProjectVisual({ project }: { project: Project }) {
 
 function ProjectCard({ project, compact }: { project: Project; compact?: boolean }) {
   const short = projectShortTitle(project);
+  const [preview, setPreview] = useState(false);
+
   return (
-    <article
-      className={cx('glass-card glass-card-hover group flex h-full flex-col overflow-hidden', compact ? '' : '')}
-      data-cursor-hover
-    >
+    <article className="glass-card glass-card-hover group flex h-full flex-col overflow-hidden" data-cursor-hover>
       <div className="relative">
-        <ProjectVisual project={project} />
+        <ProjectVisual project={project} onPreview={() => setPreview(true)} />
         {project.featured && (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-400/15 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-sm">
             <Star className="h-3 w-3 fill-current" aria-hidden /> Featured
           </span>
         )}
-        <span className="absolute right-3 top-3 rounded-full border border-line/25 bg-base/70 px-2.5 py-1 font-mono text-[10px] text-muted backdrop-blur-sm">
-          {project.category}
-        </span>
+        {project.screenshots.length > 0 && (
+          <span className="absolute right-3 top-3 rounded-full border border-line/25 bg-base/70 px-2.5 py-1 font-mono text-[10px] text-muted backdrop-blur-sm">
+            {project.category}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-5 sm:p-6">
@@ -67,7 +120,7 @@ function ProjectCard({ project, compact }: { project: Project; compact?: boolean
             {short}
           </Link>
         </h3>
-        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-muted">{project.description}</p>
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-soft">{project.description}</p>
 
         {project.highlights.length > 0 && (
           <ul className="mt-4 space-y-1.5">
@@ -118,6 +171,15 @@ function ProjectCard({ project, compact }: { project: Project; compact?: boolean
           )}
         </div>
       </div>
+
+      {preview && project.screenshots[0] && (
+        <Lightbox
+          src={project.screenshots[0]}
+          alt={`${short} screenshot`}
+          caption={`${short} — ${project.category}`}
+          onClose={() => setPreview(false)}
+        />
+      )}
     </article>
   );
 }
@@ -200,12 +262,7 @@ export default function Projects({ projects, vercelUrl }: { projects: Project[];
         )}
 
         <Reveal className="mt-14 text-center" delay={0.1}>
-          <a
-            href={vercelUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary"
-          >
+          <a href={vercelUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
             <Triangle className="h-4 w-4" aria-hidden /> Explore All Projects on Vercel
           </a>
         </Reveal>

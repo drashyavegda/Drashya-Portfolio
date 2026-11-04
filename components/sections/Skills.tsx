@@ -93,9 +93,9 @@ export default function Skills({ skills, education }: { skills: Skill[]; educati
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
                   <h3 className="font-display text-sm font-semibold leading-snug sm:text-base">{skill.name}</h3>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted/80">{skill.category}</p>
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted">{skill.category}</p>
                   {skill.description && (
-                    <p className="mt-2.5 text-xs leading-relaxed text-muted">{skill.description}</p>
+                    <p className="mt-2.5 text-xs leading-relaxed text-soft">{skill.description}</p>
                   )}
                 </div>
               </Reveal>

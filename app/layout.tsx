@@ -54,6 +54,7 @@ export const viewport: Viewport = {
 const themeInit = `
 (function () {
   try {
+    document.documentElement.classList.add('js');
     var stored = localStorage.getItem('dv-theme');
     var theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
     document.documentElement.setAttribute('data-theme', theme);
@@ -74,7 +75,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     email: `mailto:${snap.profile.email}`,
     address: { '@type': 'PostalAddress', addressLocality: 'Ahmedabad', addressRegion: 'Gujarat', addressCountry: 'IN' },
     knowsLanguage: snap.profile.languages,
-    sameAs: [snap.profile.socials.github, snap.profile.socials.linkedin, snap.profile.socials.vercel],
+    sameAs: [snap.profile.socials?.github, snap.profile.socials?.linkedin, snap.profile.socials?.vercel].filter(
+      (u): u is string => Boolean(u),
+    ),
     knowsAbout: snap.skills.map((s) => s.name),
   };
 
@@ -82,6 +85,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <noscript>
+          <style>{`.fade-item{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
       </head>
       <body className={`${sans.variable} ${display.variable} ${mono.variable} font-sans`}>
         <script

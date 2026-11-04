@@ -46,7 +46,9 @@ export default async function HomePage() {
     resumeAvailable: Boolean(snap.resume.file),
   };
 
-  const githubUsername = snap.profile.socials.github.replace(/\/+$/, '').split('/').pop() || 'drashyavegda';
+  // Guarded: partial profile data must never crash the homepage.
+  const githubUrl = snap.profile.socials?.github || '';
+  const githubUsername = githubUrl.replace(/\/+$/, '').split('/').pop() || 'drashyavegda';
 
   return (
     <>
@@ -55,7 +57,7 @@ export default async function HomePage() {
       <Skills skills={snap.skills} education={snap.education} />
       <Projects projects={snap.projects} vercelUrl={snap.profile.socials.vercel} />
       <Workspace />
-      <GitHubSection username={githubUsername} profileUrl={snap.profile.socials.github} />
+      <GitHubSection username={githubUsername} profileUrl={githubUrl || `https://github.com/${githubUsername}`} />
       <Experience hackathons={snap.hackathons} />
       <Certificates certificates={snap.certificates} learning={snap.learning} />
       <Terminal data={terminalData} />

@@ -179,19 +179,31 @@ create policy "admin all messages"        on public.messages        for all to a
 create policy "admin all analytics"       on public.analytics_events for all to authenticated using (true) with check (true);
 
 -- ----------------------------------------------------------------------------
--- 6. Storage bucket for uploads (certificates, screenshots, resume, avatars)
+-- 6. Storage buckets
+--    `certificates` — certificate files (PDF/JPG/PNG) uploaded from /admin.
+--    `uploads`      — everything else (screenshots, resume, avatars, covers).
+--    Both inserts are idempotent. The app also auto-creates them on first
+--    upload when SUPABASE_SERVICE_ROLE_KEY is set, so running this section
+--    manually is optional but recommended.
 -- ----------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('uploads', 'uploads', true)
 on conflict (id) do nothing;
 
+insert into storage.buckets (id, name, public)
+values ('certificates', 'certificates', true)
+on conflict (id) do nothing;
+
+drop policy if exists "public read uploads" on storage.objects;
 create policy "public read uploads"
   on storage.objects for select
-  using (bucket_id = 'uploads');
+  using (bucket_id in ('uploads', 'certificates'));
 
+drop policy if exists "admin write uploads" on storage.objects;
 create policy "admin write uploads"
   on storage.objects for all to authenticated
-  using (bucket_id = 'uploads') with check (bucket_id = 'uploads');
+  using (bucket_id in ('uploads', 'certificates'))
+  with check (bucket_id in ('uploads', 'certificates'));
 
 -- ----------------------------------------------------------------------------
 -- 7. Admin user

@@ -64,7 +64,7 @@ function CaseBlock({
         {body ? (
           <p className="whitespace-pre-line text-sm leading-relaxed text-muted">{body}</p>
         ) : (
-          <p className="rounded-xl border border-dashed border-line/25 p-4 font-mono text-xs text-muted/70">
+          <p className="rounded-xl border border-dashed border-line/25 p-4 font-mono text-xs text-muted">
             {pendingNote}
           </p>
         )}
@@ -157,7 +157,7 @@ export default async function ProjectPage({ params }: Props) {
           <Reveal className="mb-12">
             <div className="relative grid h-56 place-items-center overflow-hidden rounded-2xl border border-dashed border-line/25 bg-gradient-to-br from-neon/6 to-violet/6 sm:h-72">
               <div className="grid-bg absolute inset-0 opacity-50" aria-hidden />
-              <p className="relative px-6 text-center font-mono text-xs text-muted/70">
+              <p className="relative px-6 text-center font-mono text-xs text-muted">
                 Screenshots pending — will be uploaded via the Admin Dashboard.
               </p>
             </div>
@@ -231,7 +231,7 @@ export default async function ProjectPage({ params }: Props) {
                     ))}
                   </div>
                 ) : (
-                  <p className="rounded-xl border border-dashed border-line/25 p-4 font-mono text-xs text-muted/70">
+                  <p className="rounded-xl border border-dashed border-line/25 p-4 font-mono text-xs text-muted">
                     Tech stack not published yet — editable from the Admin Dashboard.
                   </p>
                 )}
@@ -251,7 +251,7 @@ export default async function ProjectPage({ params }: Props) {
                         Open ↗
                       </a>
                     ) : (
-                      <span className="text-muted/60">pending</span>
+                      <span className="text-muted">pending</span>
                     )}
                   </li>
                   <li className="flex justify-between gap-2">
@@ -261,7 +261,7 @@ export default async function ProjectPage({ params }: Props) {
                         GitHub ↗
                       </a>
                     ) : (
-                      <span className="text-muted/60">pending</span>
+                      <span className="text-muted">pending</span>
                     )}
                   </li>
                   <li className="flex justify-between gap-2">
@@ -301,7 +301,7 @@ export default async function ProjectPage({ params }: Props) {
           </div>
         )}
 
-        <p className="mt-14 text-center font-mono text-[11px] text-muted/60">
+        <p className="mt-14 text-center font-mono text-[11px] text-muted">
           Last updated {formatDate(snap.updatedAt)} · Content managed by {snap.profile.name}
         </p>
       </div>

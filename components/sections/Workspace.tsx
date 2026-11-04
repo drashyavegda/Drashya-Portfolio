@@ -254,7 +254,7 @@ export default function Workspace() {
                 </div>
                 <div className="flex-1 overflow-auto px-4 py-3 font-mono text-xs leading-relaxed" role="log" aria-live="polite" aria-label="Program output">
                   {consoleLines.length === 0 ? (
-                    <p className="text-muted/60">
+                    <p className="text-muted">
                       {phase === 'idle' ? '// Press “Run Example” to see the predefined output…' : ''}
                       <span className={phase === 'idle' ? 'term-caret' : ''} />
                     </p>
@@ -264,7 +264,7 @@ export default function Workspace() {
                         key={i}
                         className={cx(
                           'whitespace-pre-wrap',
-                          line.startsWith('$') ? 'text-neon' : line.startsWith('[') ? 'text-muted/70' : 'text-emerald-200/90',
+                          line.startsWith('$') ? 'text-neon' : line.startsWith('[') ? 'text-muted' : 'text-emerald-200/90',
                         )}
                       >
                         {line || '\u00A0'}
@@ -278,7 +278,7 @@ export default function Workspace() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <p className="mt-5 text-center font-mono text-[11px] text-muted/70">
+          <p className="mt-5 text-center font-mono text-[11px] text-muted">
             Safe by design: only predefined demonstrations run in your browser — visitor-submitted code is never executed.
           </p>
         </Reveal>

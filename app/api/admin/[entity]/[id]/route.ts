@@ -54,9 +54,24 @@ export async function DELETE(_req: Request, { params }: { params: { entity: stri
   try {
     const store = await getStore();
     const snapshot = await store.getSnapshot();
-    const exists = (snapshot[entity] as unknown as Array<Record<string, unknown>>).some((r) => r.id === params.id);
-    if (!exists) return NextResponse.json({ ok: false, error: 'Item not found.' }, { status: 404 });
+    const existing = (snapshot[entity] as unknown as Array<Record<string, unknown>>).find((r) => r.id === params.id);
+    if (!existing) return NextResponse.json({ ok: false, error: 'Item not found.' }, { status: 404 });
     const updated = await store.deleteItem(entity, params.id);
+
+    // Best-effort storage cleanup so deleted certificates don't leave orphan files.
+    if (store.deleteUpload) {
+      const fileUrls: string[] = [];
+      if (entity === 'certificates' && typeof existing.file === 'string') fileUrls.push(existing.file);
+      if (entity === 'hackathons' && typeof existing.certificate_file === 'string') fileUrls.push(existing.certificate_file);
+      for (const url of fileUrls) {
+        try {
+          await store.deleteUpload(url);
+        } catch (cleanupErr) {
+          console.warn('Storage cleanup failed (item was still deleted):', cleanupErr);
+        }
+      }
+    }
+
     return NextResponse.json({ ok: true, snapshot: updated });
   } catch (err) {
     console.error('Delete error:', err);

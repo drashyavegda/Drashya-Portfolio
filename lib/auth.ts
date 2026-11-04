@@ -37,13 +37,16 @@ export function localAuthConfigured(): boolean {
   return Boolean(process.env.ADMIN_PASSWORD);
 }
 
+// Auth requests must never be served from Next.js's fetch cache (stale sessions).
+const noStoreFetch: typeof fetch = (input, init) => fetch(input, { ...init, cache: 'no-store' });
+
 export async function login(email: string, password: string): Promise<{ ok: true; token: string } | { ok: false; error: string }> {
   if (supabaseConfigured()) {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { persistSession: false } },
+      { auth: { persistSession: false }, global: { fetch: noStoreFetch } },
     );
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.session) {
@@ -102,7 +105,7 @@ export async function verifySession(token: string | undefined | null): Promise<{
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { persistSession: false } },
+        { auth: { persistSession: false }, global: { fetch: noStoreFetch } },
       );
       const { data, error } = await supabase.auth.getUser(token.slice(3));
       if (error || !data.user) return null;

@@ -284,7 +284,7 @@ export default function Terminal({ data }: { data: TerminalData }) {
                   {line.text || '\u00A0'}
                 </p>
               ))}
-              {busy && <p className="text-muted/60">…</p>}
+              {busy && <p className="text-muted">…</p>}
             </div>
 
             {/* Suggestions */}

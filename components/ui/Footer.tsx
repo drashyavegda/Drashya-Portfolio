@@ -101,7 +101,7 @@ export default function Footer({ profile }: { profile: Profile }) {
             <h3 className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.25em] text-violet">Get in touch</h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href={`mailto:${profile.email}`} className="font-mono text-muted transition-colors hover:text-neon">
+                <a href={`mailto:${profile.email}`} className="font-mono text-soft transition-colors hover:text-neon">
                   {profile.email}
                 </a>
               </li>
@@ -119,10 +119,10 @@ export default function Footer({ profile }: { profile: Profile }) {
           <p className="text-xs text-muted">
             © {year} {profile.name}. All rights reserved.
           </p>
-          <p className="font-mono text-[11px] text-muted/80">
+          <p className="font-mono text-[11px] text-muted">
             Designed &amp; built by {profile.name} · <span className="gradient-text font-semibold">Next.js + Tailwind</span>
           </p>
-          <p className="max-w-xs text-[11px] leading-relaxed text-muted/70">
+          <p className="max-w-xs text-[11px] leading-relaxed text-muted">
             Privacy: this site records anonymous aggregate visit counts only — no personal data, no third-party trackers.
           </p>
         </div>

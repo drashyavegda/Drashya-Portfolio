@@ -21,6 +21,7 @@ const config: Config = {
         raised: 'rgb(var(--c-raised) / <alpha-value>)',
         line: 'rgb(var(--c-line) / <alpha-value>)',
         ink: 'rgb(var(--c-ink) / <alpha-value>)',
+        soft: 'rgb(var(--c-soft) / <alpha-value>)',
         muted: 'rgb(var(--c-muted) / <alpha-value>)',
         neon: 'rgb(var(--c-neon) / <alpha-value>)',
         violet: 'rgb(var(--c-violet) / <alpha-value>)',

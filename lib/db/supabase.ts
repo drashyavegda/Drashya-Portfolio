@@ -104,9 +104,35 @@ const ENTITIES: Record<EntityKey, EntityConfig> = {
 void passthrough; // helper retained for future simple entities
 
 export function makeSupabaseStore(readClient: SupabaseClient, writeClient: SupabaseClient): Store {
+  const ensuredBuckets = new Set<string>();
+
+  /**
+   * Make sure a public storage bucket exists (requires SUPABASE_SERVICE_ROLE_KEY).
+   * Safe to call repeatedly: existing buckets are detected and skipped, and each
+   * bucket is only checked once per server instance.
+   */
+  async function ensureBucket(name: string): Promise<void> {
+    if (ensuredBuckets.has(name)) return;
+    const { error } = await writeClient.storage.createBucket(name, { public: true });
+    if (error) {
+      const msg = String(error.message || '').toLowerCase();
+      const alreadyExists = msg.includes('already exists') || msg.includes('duplicate');
+      if (!alreadyExists) {
+        throw new Error(
+          `Supabase storage bucket "${name}" could not be created: ${error.message}. ` +
+            'Create it manually in Supabase Dashboard → Storage → New bucket (public), ' +
+            'or set SUPABASE_SERVICE_ROLE_KEY so the app can create it automatically.',
+        );
+      }
+    }
+    ensuredBuckets.add(name);
+  }
+
   async function ensureSeeded(): Promise<void> {
-    const { data } = await readClient.from('site_state').select('id').eq('id', 1).maybeSingle();
-    if (data) return;
+    const { data, error } = await readClient.from('site_state').select('id').eq('id', 1).maybeSingle();
+    // Only seed on a definitive "no rows" answer. If the check fails (network,
+    // permissions), skip seeding — never risk overwriting real content.
+    if (data || error) return;
     // First run: insert the full seed so the site is never empty.
     await writeClient.from('site_state').upsert({
       id: 1,
@@ -158,8 +184,14 @@ export function makeSupabaseStore(readClient: SupabaseClient, writeClient: Supab
         .order('created_at', { ascending: false })
         .limit(500);
       const s = (state ?? {}) as Row;
+      const storedProfile = (s.profile as Row) ?? {};
       return {
-        profile: { ...SEED.profile, ...((s.profile as Row) ?? {}) } as Snapshot['profile'],
+        profile: {
+          ...SEED.profile,
+          ...storedProfile,
+          // nested merge: partial socials must never leave dot-accesses undefined
+          socials: { ...SEED.profile.socials, ...((storedProfile.socials as Row) ?? {}) },
+        } as Snapshot['profile'],
         availability: { ...SEED.availability, ...((s.availability as Row) ?? {}) } as Snapshot['availability'],
         education: { ...SEED.education, ...((s.education as Row) ?? {}) } as Snapshot['education'],
         resume: { ...SEED.resume, ...((s.resume as Row) ?? {}) } as Snapshot['resume'],
@@ -270,16 +302,34 @@ export function makeSupabaseStore(readClient: SupabaseClient, writeClient: Supab
     },
 
     async saveUpload(file: File, folder: string) {
+      // Certificates live in their own dedicated bucket; everything else in `uploads`.
+      const bucket = folder === 'certificates' ? 'certificates' : 'uploads';
+      await ensureBucket(bucket);
       const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
       const key = `${folder}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      const { error } = await writeClient.storage.from('uploads').upload(key, buffer, {
+      const { error } = await writeClient.storage.from(bucket).upload(key, buffer, {
         contentType: file.type || 'application/octet-stream',
         upsert: false,
       });
       if (error) throw new Error(`Supabase storage failed: ${error.message}`);
-      const { data } = writeClient.storage.from('uploads').getPublicUrl(key);
+      const { data } = writeClient.storage.from(bucket).getPublicUrl(key);
       return data.publicUrl;
+    },
+
+    async deleteUpload(url: string) {
+      // Public URLs look like {SUPABASE_URL}/storage/v1/object/public/{bucket}/{key}
+      const marker = '/storage/v1/object/public/';
+      const idx = url.indexOf(marker);
+      if (idx === -1) return; // not a Supabase storage URL — nothing to delete
+      const rest = url.slice(idx + marker.length);
+      const slash = rest.indexOf('/');
+      if (slash === -1) return;
+      const bucket = rest.slice(0, slash);
+      const key = decodeURIComponent(rest.slice(slash + 1).split('?')[0]);
+      if (!bucket || !key) return;
+      const { error } = await writeClient.storage.from(bucket).remove([key]);
+      if (error) console.warn(`Could not delete storage object ${bucket}/${key}: ${error.message}`);
     },
   };
 }
