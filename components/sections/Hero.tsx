@@ -37,10 +37,10 @@ function useTypewriter(roles: string[]) {
         setText(role.slice(0, charIdx));
         if (charIdx === role.length) {
           deleting = true;
-          timer = setTimeout(tick, 1800);
+          timer = setTimeout(tick, 2500);
           return;
         }
-        timer = setTimeout(tick, 55 + Math.random() * 45);
+        timer = setTimeout(tick, 35 + Math.random() * 15);
       } else {
         charIdx--;
         setText(role.slice(0, charIdx));
@@ -50,7 +50,7 @@ function useTypewriter(roles: string[]) {
           timer = setTimeout(tick, 350);
           return;
         }
-        timer = setTimeout(tick, 28);
+        timer = setTimeout(tick, 18);
       }
     };
     timer = setTimeout(tick, 600);

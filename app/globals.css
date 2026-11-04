@@ -295,23 +295,11 @@ body.custom-cursor-enabled * {
    - Without JS the `html.js` class never exists → content is fully visible.
    - With JS, blocks start hidden and transition in when `.on` is added.
    - Reduced motion → always visible, no transition. */
-.js .fade-item {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.7s cubic-bezier(0.21, 0.65, 0.36, 1),
-    transform 0.7s cubic-bezier(0.21, 0.65, 0.36, 1);
-}
+.js .fade-item,
 .js .fade-item.on {
-  opacity: 1;
-  transform: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .js .fade-item {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
 }
 
 /* Reduced motion: calm everything down */
@@ -328,4 +316,11 @@ body.custom-cursor-enabled * {
 /* Admin table & forms */
 .admin-label {
   @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-soft;
+}
+
+
+body,
+body * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
