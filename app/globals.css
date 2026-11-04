@@ -319,8 +319,3 @@ body.custom-cursor-enabled * {
 }
 
 
-body,
-body * {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
