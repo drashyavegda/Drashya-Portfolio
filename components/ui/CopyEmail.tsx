@@ -32,7 +32,7 @@ export default function CopyEmail({ email }: { email: string }) {
       <Mail className="mr-2 h-4 w-4 shrink-0 text-neon" aria-hidden />
       <a
         href={`mailto:${email}`}
-        className="font-mono text-sm text-ink transition-colors hover:text-neon sm:text-base"
+        className="font-mono text-sm text-white transition-colors hover:text-neon sm:text-base"
       >
         {email}
       </a>
