@@ -5,6 +5,7 @@ import { getSnapshot } from '@/lib/db';
 import Loader from '@/components/ui/Loader';
 import Cursor from '@/components/ui/Cursor';
 import { SoundProvider } from '@/components/ui/SoundProvider';
+export const dynamic = 'force-dynamic';
 
 const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 const display = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
