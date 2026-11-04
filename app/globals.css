@@ -319,3 +319,6 @@ body.custom-cursor-enabled * {
 }
 
 
+body {
+  color: rgb(var(--c-ink));
+}
