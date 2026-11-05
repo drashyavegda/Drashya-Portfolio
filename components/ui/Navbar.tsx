@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Github, Linkedin, Menu, X } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
 import { SoundToggle } from './SoundProvider';
 import AvailabilityBadge from './AvailabilityBadge';
 import type { Availability } from '@/lib/types';
@@ -145,7 +144,6 @@ export default function Navbar({ name, socials, availability }: Props) {
             <Linkedin className="h-4 w-4" aria-hidden />
           </a>
           <SoundToggle className="hidden sm:grid" />
-          <ThemeToggle />
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
