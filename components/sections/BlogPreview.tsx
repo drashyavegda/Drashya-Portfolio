@@ -14,7 +14,7 @@ export default function BlogPreview({ posts }: { posts: BlogPost[] }) {
     .slice(0, 3);
 
   return (
-    <section id="blog-preview" data-track-section="blog" className="section relative">
+    <section id="blog" data-track-section="blog" className="section relative">
       <div className="container-x relative">
         <SectionHeading
           eyebrow="Blog"
