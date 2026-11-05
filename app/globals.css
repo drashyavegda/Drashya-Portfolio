@@ -321,6 +321,6 @@ body.custom-cursor-enabled * {
 
 body,
 body * {
-  color: #A78BFA !important;
-  -webkit-text-fill-color: #A78BFA !important;
+  color: #F4F4F5 !important;
+  -webkit-text-fill-color: #F4F4F5 !important;
 }
