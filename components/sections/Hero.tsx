@@ -66,7 +66,7 @@ export default function Hero({ profile, availability, resume }: Props) {
   useEffect(() => setMounted(true), []);
 
   return (
-    <section id="home" data-track-section="home" className="relative flex min-h-svh items-center overflow-hidden pb-16 pt-28 sm:pt-32">
+    <section id="home" data-track-section="home" className="relative flex min-h-screen items-center overflow-hidden pb-16 pt-28 sm:min-h-svh sm:pt-32">
       {/* Background layers */}
       <div className="grid-bg absolute inset-0" aria-hidden />
       <div className="glow-orb -left-32 top-10 h-96 w-96 bg-neon/12" aria-hidden />

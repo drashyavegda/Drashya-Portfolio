@@ -160,7 +160,7 @@ export default function Navbar({ name, socials, availability }: Props) {
       <div
         className={cx(
           'lg:hidden',
-          open ? 'pointer-events-auto' : 'pointer-events-none',
+          open ? 'pointer-events-auto' : 'pointer-events-none h-0 overflow-hidden',
         )}
         aria-hidden={!open}
       >
