@@ -77,8 +77,8 @@ export default function Navbar({ name, socials, availability }: Props) {
       className={cx(
         'fixed inset-x-0 top-0 z-50 transition-all duration-300',
         scrolled || open
-          ? 'border-b border-line/12 bg-base/75 shadow-[0_8px_32px_rgb(0_0_0/0.25)] backdrop-blur-xl'
-          : 'border-b border-transparent bg-transparent',
+  ? 'border-b border-line/12 bg-base shadow-[0_8px_32px_rgb(0_0_0/0.25)] sm:bg-base/75 sm:backdrop-blur-xl'
+  : 'border-b border-transparent bg-transparent',
       )}
     >
       <nav aria-label="Primary" className="container-x flex h-16 items-center justify-between gap-4 sm:h-[72px]">
